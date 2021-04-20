@@ -1,5 +1,3 @@
-const { rejects } = require('assert')
-const { resolve } = require('path')
 const querystring = require('querystring')
 const handleBlogRouter = require('./src/router/blog')
 const handleUserRouter = require('./src/router/user')
@@ -10,18 +8,24 @@ const getPostData = (req) => {
         if (req.method !== 'POST') {
             resolve({})
             return
-        } else {
-            console.log('content-type:', req.headers['content-type'])
-            let postData = ''
-            req.on('data', chunk => {
-                // chunk 本身是二进制格式， 通过 toString() 转换为字符串格式
-                postData += chunk.toString()
-            })
-            req.on('end', () => {
-                console.log('postData:', postData)
-                res.end("接收完毕")
-            })
         }
+        if (req.headers['content-type'] !== 'application/json') {
+            resolve({})
+            return
+        }
+        let postData = ''
+        req.on('data', chunk => {
+            // chunk 本身是二进制格式， 通过 toString() 转换为字符串格式
+            postData += chunk.toString()
+        })
+        req.on('end', () => {
+            if (!postData) {
+                resolve({})
+                return
+            }
+            resolve(JSON.parse(postData))
+        })
+
     })
     return promise
 }
@@ -33,25 +37,30 @@ const serverHandle = (req, res) => {
     // 获取path
     req.path = req.url.split('?')[0]
 
-    // 解析query
+    // 解析query---get
     req.query = querystring.parse(req.url.split('?')[1])
 
-    // 处理路由
-    const blogData = handleBlogRouter(req, res)
-    if (blogData) {
-        res.end(JSON.stringify(blogData))
-        return
-    }
-    const userData = handleUserRouter(req, res)
-    if (userData) {
-        res.end(JSON.stringify(userData))
-        return
-    }
+    // 解析post data---post
+    getPostData(req).then(postData => {
+        req.body = postData
 
-    // 没有命中路由
-    res.writeHead(404, { "Content-type": "text/plain" })
-    res.write("404 not found\n")
-    res.end()
+        // 处理路由
+        const blogData = handleBlogRouter(req, res)
+        if (blogData) {
+            res.end(JSON.stringify(blogData))
+            return
+        }
+        const userData = handleUserRouter(req, res)
+        if (userData) {
+            res.end(JSON.stringify(userData))
+            return
+        }
+
+        // 没有命中路由
+        res.writeHead(404, { "Content-type": "text/plain" })
+        res.write("404 not found\n")
+        res.end()
+    })
 }
 module.exports = serverHandle
 
