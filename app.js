@@ -47,19 +47,6 @@ const serverHandle = (req, res) => {
 
         // 处理路由
 
-        // 直接返回数据
-        // const blogData = handleBlogRouter(req, res)
-        // if (blogData) {
-        //     res.end(JSON.stringify(blogData))
-        //     return
-        // }
-
-        // const userData = handleUserRouter(req, res)
-        // if (userData) {
-        //     res.end(JSON.stringify(userData))
-        //     return
-        // }
-
         // 返回 promise
         const blogResult = handleBlogRouter(req, res)
         if (blogResult) {
