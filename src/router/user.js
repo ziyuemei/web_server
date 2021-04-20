@@ -5,12 +5,21 @@ const handleUserRouter = (req, res) => {
     const method = req.method
     if (method === 'POST' && req.path === '/api/user/login') {
         const { username, password } = req.body
-        const data = loginCheck(username, password)
-        if (data) {
-            return new SuccessModel()
-        } else {
+
+        // const data = loginCheck(username, password)
+        // if (data) {
+        //     return new SuccessModel()
+        // } else {
+        //     return new ErrorModel('用户名或密码错误，登录失败')
+        // }
+
+        const result = loginCheck(username, password)
+        return result.then(data => {
+            if (data.username) {
+                return new SuccessModel()
+            }
             return new ErrorModel('用户名或密码错误，登录失败')
-        }
+        })
     }
 }
 module.exports = handleUserRouter

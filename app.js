@@ -10,6 +10,7 @@ const getPostData = (req) => {
             return
         }
         if (req.headers['content-type'] !== 'application/json') {
+
             resolve({})
             return
         }
@@ -45,14 +46,33 @@ const serverHandle = (req, res) => {
         req.body = postData
 
         // 处理路由
-        const blogData = handleBlogRouter(req, res)
-        if (blogData) {
-            res.end(JSON.stringify(blogData))
+
+        // 直接返回数据
+        // const blogData = handleBlogRouter(req, res)
+        // if (blogData) {
+        //     res.end(JSON.stringify(blogData))
+        //     return
+        // }
+
+        // const userData = handleUserRouter(req, res)
+        // if (userData) {
+        //     res.end(JSON.stringify(userData))
+        //     return
+        // }
+
+        // 返回 promise
+        const blogResult = handleBlogRouter(req, res)
+        if (blogResult) {
+            blogResult.then(blogData => {
+                res.end(JSON.stringify(blogData))
+            })
             return
         }
-        const userData = handleUserRouter(req, res)
-        if (userData) {
-            res.end(JSON.stringify(userData))
+        const userResult = handleUserRouter(req, res)
+        if (userResult) {
+            userResult.then(userData => {
+                res.end(JSON.stringify(userData))
+            })
             return
         }
 
