@@ -22,8 +22,17 @@ const handleBlogRouter = (req, res) => {
 
     // 获取博客列表
     if (method === 'GET' && req.path === '/api/blog/list') {
-        const author = req.query.author || ''
+        let author = req.query.author || ''
         const keyword = req.query.keyword || ''
+
+        // 只查询自己的博客---管理员界面
+        if (req.query.isadmin) {
+            const loginCheckResult = loginCheck(req)
+            if (loginCheckResult) {
+                return loginCheckResult
+            }
+            author = req.session.username
+        }
 
         // result 是个promise
         const result = getList(author, keyword)
@@ -46,7 +55,7 @@ const handleBlogRouter = (req, res) => {
     if (method === 'POST' && req.path === '/api/blog/new') {
         const loginCheckResult = loginCheck(req)
         if (loginCheckResult) {
-            return loginCheck
+            return loginCheckResult
         }
         req.body.author = req.session.username
         const result = newBlog(req.body)
@@ -60,7 +69,7 @@ const handleBlogRouter = (req, res) => {
     if (method === 'POST' && req.path === '/api/blog/update') {
         const loginCheckResult = loginCheck(req)
         if (loginCheckResult) {
-            return loginCheck
+            return loginCheckResult
         }
         const result = updateBlog(id, req.body)
 
@@ -77,7 +86,7 @@ const handleBlogRouter = (req, res) => {
     if (method === 'POST' && req.path === '/api/blog/del') {
         const loginCheckResult = loginCheck(req)
         if (loginCheckResult) {
-            return loginCheck
+            return loginCheckResult
         }
         const author = req.session.username
         const result = delBlog(id, author)
