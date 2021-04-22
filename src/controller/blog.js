@@ -1,10 +1,13 @@
-const { exec } = require('../db/mysql')
+const { exec, escape } = require('../db/mysql')
+const xss = require('xss')
 
 const getList = (author, keyword) => {
     // 1=1 是占位符，避免 author 和 keyword 都没值得情况
     let sql = `select * from blogs where 1=1 `
     if (author) {
-        sql += `and author='${author}' `
+        // 防SQL注入
+        author = escape(author)
+        sql += `and author=${author} `
     }
     if (keyword) {
         sql += `and title like '%${keyword}%' `
@@ -24,14 +27,13 @@ const getDetail = (id) => {
 
 const newBlog = (blogData = {}) => {
     // blogData 是一个博客对象，包含 title content 属性
-    const title = blogData.title
-    const content = blogData.content
-    const author = blogData.author
+    const title = xss(escape(blogData.title))
+    const content = xss(escape(blogData.content))
+    const author = escape(blogData.author)
     const createtime = Date.now()
     const sql = `
     insert into blogs (title,content,createtime,author)
-    values ('${title}','${content}','${createtime}','${author}');`
-
+    values (${title},${content},'${createtime}',${author});`
     return exec(sql).then(insertData => {
         return {
             id: insertData.insertId
@@ -42,11 +44,10 @@ const newBlog = (blogData = {}) => {
 const updateBlog = (id, blogData = {}) => {
     // id： 要更新博客的 ID
     // blogData 是一个博客对象，包含 title content 属性
-    const title = blogData.title
-    const content = blogData.content
-
+    const title = escape(blogData.title)
+    const content = escape(blogData.content)
     const sql = `
-    update blogs set title='${title}', content='${content}' where id='${id}';`
+    update blogs set title=${title}, content=${content} where id='${id}';`
 
     return exec(sql).then(updatetData => {
         if (updatetData.affectedRows > 0) {
